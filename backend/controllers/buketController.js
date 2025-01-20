@@ -1,4 +1,5 @@
 const Buket = require("../models/Buket");
+const mongoose = require("mongoose");
 
 // Get all bukets
 exports.getAllBukets = async (req, res) => {
@@ -22,7 +23,6 @@ exports.getBuketById = async (req, res) => {
   }
 };
 
-// Add a new buket
 exports.addBuket = async (req, res) => {
   try {
     const { name, category, price, description, stock } = req.body;
@@ -40,13 +40,19 @@ exports.addBuket = async (req, res) => {
 
     res.status(201).json(newBuket);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// Update buket details (including image)
 exports.updateBuket = async (req, res) => {
   const { id } = req.params;
+
+  // Validasi ID
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid Buket ID" });
+  }
+
   try {
     const { name, category, price, description, stock } = req.body;
     const image = req.file ? `/uploads/${req.file.filename}` : undefined;
@@ -65,7 +71,6 @@ exports.updateBuket = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 // Delete a buket
 exports.deleteBuket = async (req, res) => {
   const { id } = req.params;

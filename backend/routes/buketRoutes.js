@@ -7,26 +7,72 @@ const {
   deleteBuket,
   updateStock,
 } = require("../controllers/buketController");
-const upload = require("../middleware/upload");
+const { upload, handleMulterError } = require("../middleware/upload");
 
 const router = express.Router();
 
-// Get all bukets
-router.get("/", getAllBukets);
+// Route: Get all bukets
+router.get("/", async (req, res) => {
+  try {
+    await getAllBukets(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Get buket by ID
-router.get("/:id", getBuketById);
+// Route: Get a buket by ID
+router.get("/:id", async (req, res) => {
+  try {
+    await getBuketById(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Add a new buket with image
-router.post("/", upload.single("image"), addBuket);
+// Route: Add a new buket with image upload
+router.post(
+  "/",
+  upload.single("image"),
+  handleMulterError,
+  async (req, res) => {
+    try {
+      await addBuket(req, res);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
 
-// Update buket details with image
-router.put("/:id", upload.single("image"), updateBuket);
+// Route: Update buket details with image upload
+router.put(
+  "/:id",
+  upload.single("image"),
+  handleMulterError,
+  async (req, res) => {
+    try {
+      await updateBuket(req, res);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
 
-// Delete a buket
-router.delete("/:id", deleteBuket);
+// Route: Delete a buket
+router.delete("/:id", async (req, res) => {
+  try {
+    await deleteBuket(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Update stock status
-router.patch("/:id/stock", updateStock);
+// Route: Update stock status
+router.patch("/:id/stock", async (req, res) => {
+  try {
+    await updateStock(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
