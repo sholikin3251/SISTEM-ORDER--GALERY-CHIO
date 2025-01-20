@@ -1,9 +1,32 @@
 import React from "react";
+import LoginForm from "./components/auth/LoginForm";
+import RegisterForm from "./components/auth/RegisterForm";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-function App() {
+const App = () => {
   return (
-    <h1 className="text-start font-extrabold text-blue-700">SolikhinGanteng</h1>
+    <Router>
+      <div>
+        <Routes>
+          {/* Login dan Register */}
+          <Route path="/" element={<LoginForm />} />
+          <Route path="/register" element={<RegisterForm />} />
+
+          {/* Halaman dashboard berdasarkan role */}
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+
+          {/* Halaman fallback jika route tidak ditemukan */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;
