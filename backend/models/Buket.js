@@ -4,7 +4,7 @@ const buketSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: {
     type: String,
-    enum: ["Bunga", "Snack", "Boneka", "Uang"],
+    enum: ["bunga", "snack", "boneka", "uang"],
     required: true,
   },
   price: { type: Number, required: true },
