@@ -3,49 +3,92 @@ import {
   getCartItems,
   removeFromCart,
   updateCartItem,
-} from "../../api/cartApi"; // Pastikan path sesuai
+  payCart,
+} from "../../api/cartApi";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 const CartSheet = ({ onClose }) => {
-  const [cartItems, setCartItems] = useState([]); // Inisialisasi sebagai array
+  const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // Tambahkan state untuk pesan error
+  const [error, setError] = useState("");
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [qrCode, setQrCode] = useState(""); // State to store QR Code
+  const [userData, setUserData] = useState({
+    name: "",
+    phone: "",
+    address: "",
+  });
 
-  // Fungsi untuk mendapatkan item dari API
+  // Fetch cart items
   const fetchCartItems = async () => {
     try {
       setLoading(true);
       const response = await getCartItems();
-      setCartItems(response?.cartItems || []); // Pastikan array, gunakan fallback jika tidak ada data
+      setCartItems(response?.cartItems || []);
     } catch (err) {
-      console.error("Gagal mendapatkan item keranjang:", err.message);
-      setError("Gagal memuat data keranjang."); // Simpan pesan error
-      setCartItems([]); // Tetapkan array kosong jika ada error
+      setError("Gagal memuat data keranjang. Silakan coba lagi.");
+      console.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fungsi untuk menghapus item dari keranjang
+  // Handle payment logic
+  const handlePayment = async () => {
+    try {
+      setLoading(true);
+
+      // Validate user data
+      if (!userData.name || !userData.phone || !userData.address) {
+        alert("Nama, No HP, dan Alamat wajib diisi.");
+        return;
+      }
+
+      if (cartItems.length === 0) {
+        alert("Keranjang kosong, tidak ada item untuk dibayar.");
+        return;
+      }
+
+      const cartId = cartItems[0]._id;
+
+      const response = await payCart(cartId, userData); // Pass user data
+
+      if (response?.qrCode) {
+        setQrCode(response.qrCode); // Set QR Code from backend
+        alert("Pembayaran berhasil! Silakan scan QR Code untuk melanjutkan.");
+        setPaymentSuccess(true);
+        setCartItems([]); // Empty the cart after successful payment
+      } else {
+        alert(response?.message || "Gagal memproses pembayaran.");
+      }
+    } catch (err) {
+      console.error("Error saat memproses pembayaran:", err.message);
+      alert("Terjadi kesalahan saat memproses pembayaran.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle item removal from cart
   const handleRemoveItem = async (cartItemId) => {
     try {
       await removeFromCart(cartItemId);
-      setCartItems(cartItems.filter((item) => item._id !== cartItemId)); // Perbarui state
+      setCartItems(cartItems.filter((item) => item._id !== cartItemId));
     } catch (err) {
       console.error("Gagal menghapus item dari keranjang:", err.message);
       setError("Gagal menghapus item.");
     }
   };
 
+  // Handle updating item quantity in the cart
   const handleUpdateQuantity = async (cartItemId, newQuantity) => {
     if (newQuantity < 1) {
       console.warn("Jumlah tidak boleh kurang dari 1");
       return;
     }
     try {
-      setLoading(true); // Tampilkan loading
+      setLoading(true);
       const response = await updateCartItem(cartItemId, newQuantity);
-
       if (response?.updatedItem) {
         setCartItems((prevItems) =>
           prevItems.map((item) =>
@@ -64,28 +107,37 @@ const CartSheet = ({ onClose }) => {
     } catch (error) {
       console.error("Gagal memperbarui jumlah item:", error.message);
     } finally {
-      setLoading(false); // Sembunyikan loading
+      setLoading(false);
     }
   };
 
-  useEffect(() => {}, [cartItems]);
+  // Handle input changes for user data
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUserData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
   useEffect(() => {
     fetchCartItems();
   }, []);
 
   return (
-    <div className="fixed top-0 right-0 h-full bg-gradient-to-b from-purple-500 to-purple-700 shadow-lg w-96 transform translate-x-0 transition-transform duration-300 z-50 rounded-l-lg">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-purple-800 text-white rounded-tl-lg">
+    <div className="fixed top-0 right-0 h-full w-96 bg-gradient-to-b from-purple-500 via-purple-600 to-purple-700 shadow-2xl rounded-l-lg z-50 overflow-auto transform transition-transform duration-300">
+      <div className="flex items-center justify-between p-4 bg-purple-800 text-white rounded-tl-lg shadow-md">
         <h2 className="text-2xl font-semibold tracking-wide">Keranjang</h2>
-        <button onClick={onClose} className="hover:bg-purple-600 p-2 rounded">
-          <XMarkIcon className="h-6 w-6" />
+        <button
+          onClick={onClose}
+          className="hover:bg-purple-600 p-2 rounded-full transition duration-300"
+        >
+          <XMarkIcon className="h-6 w-6 text-white" />
         </button>
       </div>
 
-      {/* Konten */}
-      <div className="p-4 space-y-4">
+      {/* Cart Item List */}
+      <div className="p-4 space-y-4 overflow-y-auto">
         {loading ? (
           <div className="flex justify-center items-center">
             <p className="text-white animate-pulse">Memuat keranjang...</p>
@@ -99,16 +151,13 @@ const CartSheet = ({ onClose }) => {
             {cartItems.map((item) => (
               <li
                 key={item._id}
-                className="flex items-center space-x-4 bg-white shadow-md rounded-lg p-4"
+                className="flex items-center space-x-4 bg-white shadow-lg rounded-lg p-4 transition-all hover:scale-105 duration-200"
               >
-                {/* Gambar Produk */}
                 <img
                   src={`http://localhost:5000${item.product?.image}`}
                   alt={item.product?.name || "Produk"}
                   className="w-16 h-16 rounded-md object-cover border border-gray-200"
                 />
-
-                {/* Detail Produk */}
                 <div className="flex-1">
                   <p className="text-lg font-semibold text-gray-800">
                     {item.product?.name || "Produk tidak diketahui"}
@@ -120,13 +169,10 @@ const CartSheet = ({ onClose }) => {
                     Harga: Rp {item.product?.price || 0}
                   </p>
                 </div>
-
-                {/* Kontrol */}
                 <div className="text-right space-y-2">
-                  {/* Tombol Jumlah */}
                   <div className="flex items-center space-x-2">
                     <button
-                      className="px-2 py-1 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded"
+                      className="px-2 py-1 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-md transition duration-300"
                       onClick={() =>
                         handleUpdateQuantity(item._id, item.quantity - 1)
                       }
@@ -135,7 +181,7 @@ const CartSheet = ({ onClose }) => {
                     </button>
                     <span className="font-medium">{item.quantity}</span>
                     <button
-                      className="px-2 py-1 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded"
+                      className="px-2 py-1 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-md transition duration-300"
                       onClick={() =>
                         handleUpdateQuantity(item._id, item.quantity + 1)
                       }
@@ -146,9 +192,8 @@ const CartSheet = ({ onClose }) => {
                   <p className="text-sm font-semibold text-gray-700">
                     Total: Rp {item.totalPrice || 0}
                   </p>
-                  {/* Tombol Hapus */}
                   <button
-                    className="text-red-500 text-sm hover:underline"
+                    className="text-red-500 text-sm hover:underline transition duration-300"
                     onClick={() => handleRemoveItem(item._id)}
                   >
                     Hapus
@@ -167,15 +212,63 @@ const CartSheet = ({ onClose }) => {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="p-4 bg-purple-800 text-white flex justify-between items-center">
+      {/* User Input Data */}
+      <div className="p-4">
+        <h3 className="text-xl font-semibold text-white">Data Pengguna</h3>
+        <div className="space-y-4 mt-4">
+          <input
+            type="text"
+            name="name"
+            value={userData.name}
+            onChange={handleInputChange}
+            placeholder="Nama lengkap"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300"
+          />
+          <input
+            type="text"
+            name="phone"
+            value={userData.phone}
+            onChange={handleInputChange}
+            placeholder="Nomor Telepon"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300"
+          />
+          <input
+            type="text"
+            name="address"
+            value={userData.address}
+            onChange={handleInputChange}
+            placeholder="Alamat"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300"
+          />
+        </div>
+      </div>
+
+      {/* Payment Summary */}
+      <div className="p-4 bg-purple-800 text-white">
         <p className="text-lg font-semibold">
           Total Keranjang: Rp{" "}
           {cartItems.reduce((acc, item) => acc + item.totalPrice, 0)}
         </p>
-        <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-semibold">
-          Checkout
+        <button
+          onClick={handlePayment}
+          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-300"
+        >
+          Bayar Sekarang
         </button>
+
+        {/* QR Code Display */}
+        {paymentSuccess && qrCode && (
+          <div className="mt-4 text-center">
+            <p className="text-lg font-medium">
+              Scan QR Code untuk pembayaran:
+            </p>
+            <img
+              src={qrCode}
+              alt="QR Code"
+              className="w-48 h-48 mx-auto mt-2 rounded-lg shadow-md"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -43,12 +43,12 @@ const RegisterModal = ({ onClose }) => {
       <div className="bg-white w-full max-w-md p-5 shadow-lg rounded relative">
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+          className="absolute top-2 right-2 text-purple-500 text-5xl hover:text-gray-700"
         >
           ×
         </button>
         <div className="text-center mb-4">
-          <img src={logo} alt="Gallery Chio" className="w-16 h-16 mx-auto" />
+          <img src={logo} alt="Gallery Chio" className="w-44 h-44 mx-auto" />
           <h2 className="text-2xl font-bold text-purple-700">Register</h2>
         </div>
         {success && (

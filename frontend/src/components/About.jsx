@@ -1,4 +1,8 @@
 import React from "react";
+import Boneka from "../assets/Boneka.jpg";
+import Bunga from "../assets/Bunga.jpg";
+import Snack from "../assets/Snack.jpg";
+import Uang from "../assets/Uang.jpg";
 
 const AboutUs = () => {
   return (
@@ -32,22 +36,22 @@ const AboutUs = () => {
         {/* Foto Ilustrasi */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
           <img
-            src="/images/buket-bunga.jpg"
+            src={Bunga}
             alt="Buket Bunga"
             className="w-full h-48 object-cover rounded-lg shadow-md"
           />
           <img
-            src="/images/buket-uang.jpg"
+            src={Uang}
             alt="Buket Uang"
             className="w-full h-48 object-cover rounded-lg shadow-md"
           />
           <img
-            src="/images/buket-boneka.jpg"
+            src={Boneka}
             alt="Buket Boneka"
             className="w-full h-48 object-cover rounded-lg shadow-md"
           />
           <img
-            src="/images/buket-snack.jpg"
+            src={Snack}
             alt="Buket Snack"
             className="w-full h-48 object-cover rounded-lg shadow-md"
           />

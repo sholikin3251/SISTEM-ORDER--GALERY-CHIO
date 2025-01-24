@@ -77,3 +77,19 @@ export const updateCartItem = async (cartItemId, quantity) => {
     throw error;
   }
 };
+
+// Fungsi untuk memproses pembayaran keranjang
+// Fungsi untuk memproses pembayaran keranjang dengan mengirimkan data pengguna
+export const payCart = async (cartId, userData) => {
+  try {
+    // Mengirim data cartId dan userData (nama, no HP, alamat)
+    const response = await cartApi.post(`/pay/${cartId}`, userData);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error memproses pembayaran keranjang:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};

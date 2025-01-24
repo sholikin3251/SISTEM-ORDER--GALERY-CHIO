@@ -15,4 +15,7 @@ router.delete("/remove/:cartItemId", protect, cartController.removeFromCart);
 // Endpoint untuk memperbarui kuantitas item dalam keranjang
 router.put("/update/:cartItemId", protect, cartController.updateCartItem);
 
+router.post("/pay/:cartId", protect, cartController.payCart);
+
+router.get("/payment/:orderId", cartController.processPayment);
 module.exports = router;

@@ -36,12 +36,12 @@ const LoginForm = ({ onClose }) => {
       <div className="bg-white w-96 p-6 rounded-lg shadow-lg relative">
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+          className="absolute top-2 right-2 text-purple-500 text-5xl hover:text-gray-700"
         >
           &times;
         </button>
         <div className="text-center">
-          <img src={logo} alt="Logo" className="w-16 h-16 mx-auto mb-4" />
+          <img src={logo} alt="Logo" className="w-44 h-44 mx-auto" />
           <h2 className="text-2xl font-bold mb-4 text-purple-700">Login</h2>
         </div>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
